@@ -1,17 +1,20 @@
 use std::ptr::NonNull;
 
 use pyo3::{
-    ffi::{PyCapsule_GetPointer, PyCapsule_New, PyCapsule_SetName, PyErr_Occurred, PyErr_Restore},
+    IntoPyObject, Python,
+    ffi::{
+        PyCapsule_GetPointer, PyCapsule_New, PyCapsule_SetName, PyErr_GetRaisedException,
+        PyErr_Occurred, PyErr_SetRaisedException,
+    },
     prelude::*,
-    IntoPy, Python,
 };
 
 use crate::{
     ffi,
     manager_ctx::ManagerCtx,
     tensor::{
-        traits::{IntoDLPack, ToTensor},
         ManagedTensor,
+        traits::{IntoDLPack, ToTensor},
     },
 };
 
@@ -52,17 +55,14 @@ unsafe extern "C" fn dlpack_capsule_deleter(capsule: *mut pyo3::ffi::PyObject) {
         return;
     }
 
-    let mut exc_type = std::ptr::null_mut();
-    let mut exc_value = std::ptr::null_mut();
-    let mut exc_trace = std::ptr::null_mut();
-    pyo3::ffi::PyErr_Fetch(&mut exc_type, &mut exc_value, &mut exc_trace);
+    let exc = PyErr_GetRaisedException();
 
     let managed = PyCapsule_GetPointer(capsule, DLPACK_CAPSULE_NAME.as_ptr() as *const _)
         as *mut ffi::DLManagedTensor;
 
     if managed.is_null() {
         pyo3::ffi::PyErr_WriteUnraisable(capsule);
-        PyErr_Restore(exc_type, exc_value, exc_trace);
+        PyErr_SetRaisedException(exc);
         return;
     }
 
@@ -71,17 +71,21 @@ unsafe extern "C" fn dlpack_capsule_deleter(capsule: *mut pyo3::ffi::PyObject) {
         assert!(PyErr_Occurred().is_null());
     }
 
-    PyErr_Restore(exc_type, exc_value, exc_trace);
+    PyErr_SetRaisedException(exc);
 }
 
-impl<T> IntoPy<PyObject> for ManagerCtx<T>
+impl<'py, T> IntoPyObject<'py> for ManagerCtx<T>
 where
     T: ToTensor,
 {
-    fn into_py(self, py: Python<'_>) -> PyObject {
+    type Target = PyAny; // the Python type
+    type Output = Bound<'py, Self::Target>; // in most cases this will be `Bound`
+    type Error = std::convert::Infallible;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let dlpack = self.into_dlpack();
         let capsule = dlpack_to_py_capsule(dlpack);
-        unsafe { PyObject::from_owned_ptr(py, capsule) }
+        Ok(unsafe { PyObject::from_owned_ptr(py, capsule) }.into_bound(py))
     }
 }
 
@@ -95,14 +99,18 @@ impl ManagedTensor {
 }
 
 impl<'source> FromPyObject<'source> for ManagedTensor {
-    fn extract(ob: &'source PyAny) -> PyResult<Self> {
-        Ok(ManagedTensor::from_py_ptr(ob.into_ptr()))
+    fn extract_bound(ob: &Bound<'source, PyAny>) -> PyResult<Self> {
+        Ok(ManagedTensor::from_py_ptr(ob.as_ptr()))
     }
 }
 
-impl IntoPy<PyObject> for ManagedTensor {
-    fn into_py(self, py: Python<'_>) -> PyObject {
+impl<'py> IntoPyObject<'py> for ManagedTensor {
+    type Target = PyAny; // the Python type
+    type Output = Bound<'py, Self::Target>; // in most cases this will be `Bound`
+    type Error = std::convert::Infallible;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let capsule = dlpack_to_py_capsule(self.into_inner());
-        unsafe { PyObject::from_owned_ptr(py, capsule) }
+        Ok(unsafe { PyObject::from_owned_ptr(py, capsule) }.into_bound(py))
     }
 }

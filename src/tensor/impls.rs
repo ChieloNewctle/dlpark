@@ -5,9 +5,9 @@ use super::{
     traits::{InferDtype, IntoDLPack, ToTensor},
 };
 use crate::{
+    ShapeAndStrides,
     ffi::{DataType, Device},
     manager_ctx::ManagerCtx,
-    ShapeAndStrides,
 };
 
 macro_rules! impl_for_rust_type {

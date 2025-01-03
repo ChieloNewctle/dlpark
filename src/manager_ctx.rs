@@ -1,10 +1,9 @@
 use std::ptr::NonNull;
 
 use crate::{
-    ffi,
+    ShapeAndStrides, ffi,
     prelude::ToTensor,
     tensor::traits::{IntoDLPack, TensorView},
-    ShapeAndStrides,
 };
 
 unsafe extern "C" fn deleter_fn<T>(dl_managed_tensor: *mut ffi::DLManagedTensor) {
@@ -12,7 +11,9 @@ unsafe extern "C" fn deleter_fn<T>(dl_managed_tensor: *mut ffi::DLManagedTensor)
     let ctx = (*dl_managed_tensor).manager_ctx as *mut T;
     // https://doc.rust-lang.org/std/boxed/struct.Box.html#method.into_raw
     // Use from_raw to clean it.
-    unsafe { let _ = Box::from_raw(ctx); };
+    unsafe {
+        let _ = Box::from_raw(ctx);
+    };
 }
 
 // TODO: should be ManagerCtx<T, M> where M is one of DLManagedTensor and

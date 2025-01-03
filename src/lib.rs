@@ -23,7 +23,7 @@ pub use crate::{
     manager_ctx::ManagerCtx,
     shape_and_strides::ShapeAndStrides,
     tensor::{
-        traits::{DLPack, FromDLPack, InferDtype, IntoDLPack, TensorView, ToTensor},
         ManagedTensor,
+        traits::{DLPack, FromDLPack, InferDtype, IntoDLPack, TensorView, ToTensor},
     },
 };

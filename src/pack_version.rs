@@ -1,4 +1,4 @@
-use crate::ffi::{PackVersion, DLPACK_MAJOR_VERSION, DLPACK_MINOR_VERSION};
+use crate::ffi::{DLPACK_MAJOR_VERSION, DLPACK_MINOR_VERSION, PackVersion};
 
 impl Default for PackVersion {
     fn default() -> Self {

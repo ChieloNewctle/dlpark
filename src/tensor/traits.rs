@@ -1,9 +1,9 @@
 use std::ptr::NonNull;
 
 use crate::{
+    ShapeAndStrides,
     ffi::{self, DataType, Device},
     utils::is_contiguous,
-    ShapeAndStrides,
 };
 
 /// DLPack is a data structure that can be used to describe tensor data.
