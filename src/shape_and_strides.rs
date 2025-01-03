@@ -157,7 +157,7 @@ mod tests {
         assert_eq!(shape.ndim(), 3);
         assert_eq!(shape.shape(), &[1, 2, 3]);
         assert_eq!(shape.strides(), None);
-        assert_eq!(shape.is_contiguous(), true);
+        assert!(shape.is_contiguous());
     }
 
     #[test]
@@ -167,7 +167,7 @@ mod tests {
         assert_eq!(shape.ndim(), 3);
         assert_eq!(shape.shape(), &[1, 2, 3]);
         assert_eq!(shape.strides(), Some([6, 3, 1].as_slice()));
-        assert_eq!(shape.is_contiguous(), true);
+        assert!(shape.is_contiguous());
     }
 
     #[test]
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(shape.ndim(), 3);
         assert_eq!(shape.shape(), &[1, 2, 3]);
         assert_eq!(shape.strides(), Some([6, 3, 1].as_slice()));
-        assert_eq!(shape.is_contiguous(), true);
+        assert!(shape.is_contiguous());
 
         // Make a not contiguous shape.
         let shape = ShapeAndStrides::new_with_strides(&[1, 2, 3], &[1, 2, 3]);
@@ -193,6 +193,6 @@ mod tests {
         assert_eq!(shape.ndim(), 3);
         assert_eq!(shape.shape(), &[1, 2, 3]);
         assert_eq!(shape.strides(), Some([6, 3, 1].as_slice()));
-        assert_eq!(shape.is_contiguous(), true);
+        assert!(shape.is_contiguous());
     }
 }
